@@ -1,0 +1,60 @@
+// FTS model in PRISM code for article Towards a Context-driven Deployment Optimization for Embedded Systems: A Product Line Approach
+
+mdp
+
+module FTS 
+	
+	// FTS states
+	s: [0..21];
+	T1: bool init false;
+	T2: bool init false;
+	T3: bool init false;
+	T4: bool init false;
+	T5: bool init false;
+	T6: bool init false;
+	T7: bool init false;
+	T8: bool init false;
+	T9: bool init false;
+
+	//processing elements
+	PE1: bool init false;
+	PE2: bool init false;
+	PE3: bool init false;
+	PE4: bool init false;
+	PE5: bool init false;
+	PE6: bool init false;
+
+	//networking elements
+	NE1: bool init false;
+	NE2: bool init false;
+	NE3: bool init false;
+
+	[] (s=0)  & (T1=false) & (T9 | T4)->  (s'=1) & (T1'=true);
+	[] (s=0)  & (T2=false) & (T3)->  (s'=2) & (T2'=true);
+	[] (s=0)  & (T3=false) ->  (s'=3) & (T3'=true);
+	[] (s=0)  & (T4=false) & (T2|T6|T5) ->  (s'=4) & (T4'=true);
+	[] (s=0)  & (T5=false) ->  (s'=5) & (T5'=true);
+	[] (s=0)  & (T6=false) ->  (s'=6) & (T6'=true);
+	[] (s=0)  & (T7=false) & (T1)->  (s'=7) & (T7'=true);
+	[] (s=0)  & (T8=false) & (T1)->  (s'=8) & (T8'=true);
+	[] (s=0)  & (T9=false) ->  (s'=9) & (T9'=true);
+	[TASKS] (s=1 |s=2 |s=3|s=4|s=5|s=6|s=7|s=8|s=9)  ->  (s'=10);
+
+	[] (s=10) & ((PE2&NE2) |(PE3|PE4|PE5)&NE1)-> (s'=11) & (PE1'=true);
+	[] (s=10) & ((PE3|PE4|PE5)&NE2)-> (s'=12) & (PE2'=true);
+	[] (s=10) & ((PE1|PE4|PE5)&NE1)-> (s'=13) & (PE3'=true);
+	[] (s=10) & ((PE1|PE3|PE5)&NE1)-> (s'=14) & (PE4'=true);
+	[] (s=10) & ((PE6&NE3) |(PE1|PE2|PE4)&NE1)-> (s'=15) & (PE5'=true);
+	[] (s=10) & (PE5&NE3) -> (s'=16) & (PE6'=true);
+	[PE] (s=11 | s=12 |s=13 |s=14 |s=15 |s=16)  -> (s'=17) ;
+
+
+	[] (s=17) & (PE6|PE5)-> (s'=18) & (NE1'=true);
+	[] (s=17) & (PE1|PE2)-> (s'=19) & (NE2'=true);
+	[] (s=17) & (PE1|PE3|PE4|PE5)-> (s'=20) & (NE3'=true);
+
+	[NE] (s=18 | s=19 |s=20)  -> (s'=0) ;
+
+	
+endmodule
+
