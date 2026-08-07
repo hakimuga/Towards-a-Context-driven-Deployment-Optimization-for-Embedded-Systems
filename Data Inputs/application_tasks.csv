@@ -1,0 +1,10 @@
+task_name,workload_mi,predecessors
+BrakePedal,80.0,
+CruiseControl,90.0,
+WSR_F,60.0,
+WSR_R,60.0,
+EmergencyStop,100.0,BrakePedal
+LoadCompensator,120.0,EmergencyStop;WSR_F;WSR_R
+ABS_Main,150.0,LoadCompensator;CruiseControl
+WAC_F,70.0,ABS_Main
+WAC_R,70.0,ABS_Main
