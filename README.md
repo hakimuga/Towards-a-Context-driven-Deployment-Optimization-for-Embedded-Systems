@@ -22,16 +22,16 @@ This package implements two complementary evaluation paths to explore the design
 │
 ├── Formal Model Checking/
 │   ├── prism_generator-v5.py         # Calibrated FTS generator (outputs parameterized PRISM code)
-│   ├── prism_model_parameterized-v5.pm # Parameterized PRISM model with step-counter
+│   ├── prism_model_parameterized-v5.nm # Parameterized PRISM model with step-counter
 │   └── prism_properties-v5.pctl      # Properties file with exact engine-compatible PCTL queries
 │
 ├── Python Markov Solver/
 │   ├── markov_solver-v1.py           # Autonomic MDP solver (uses backward induction over bitmasks)
-│   └── README-solver.md              # Detailed mathematical documentation of the Markov solver
+│   └── README.md              # Detailed mathematical documentation of the Markov solver
 │
 ├── HW/SW Co-Simulation/
 │   ├── scope_simulator-v7.py         # Kahn-ordered SystemC-style co-simulation of the MPSoC platform
-│   └── README-validation-calibration.md # Methodology documentation for the top-down model calibration
+│   └── README.md # Methodology documentation for the top-down model calibration
 │
 └── README.md                         # This main documentation file
 ```
