@@ -4,7 +4,6 @@
 This repository contains the complete replication package for the formal modeling, verification, and hardware/software co-simulation of the **Automatic Braking System (ABS)** case study presented in the publication:
 > **"Toward a context-driven deployment optimization for embedded systems: a product line approach"**  
 > *The Journal of Supercomputing (2022)*  
-> [doi.org/10.1007/s11227-022-04741-8](https://doi.org/10.1007/s11227-022-04741-8)
 
 This package implements two complementary evaluation paths to explore the design space of heterogeneous Multi-Processing Systems-on-Chips (MPSoCs):
 1. **Formal Verification (PRISM/STORM & Markov Solver)**: Verifies the reliability of task-to-processor mappings against probabilistic temporal logic specifications (PCTL).
