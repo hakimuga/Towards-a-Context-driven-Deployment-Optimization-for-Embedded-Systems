@@ -1,0 +1,348 @@
+// ========================================================
+// GENERATED PARAMETERIZED PRISM MODEL FOR MPSoC DEPLOYMENT
+// Grounded in FTS & Product Line Approach
+// when evaluating the Pmin and Pmax properties.
+// ========================================================
+
+mdp
+
+// --- PARAMETERIZATION CONSTANTS ---
+const int num_pes; // Target number of processors (PE)
+const int num_nes; // Target number of connectors/buses (NE)
+
+// --- FEATURE SELECTION CONSTANTS ---
+const bool platform = true; // root node
+const int PE1; // 0 or 1
+const int PE2; // 0 or 1
+const int PE3; // 0 or 1
+const int PE4; // 0 or 1
+const int PE5; // 0 or 1
+const int PE6; // 0 or 1
+const int NE1; // 0 or 1
+const int NE2; // 0 or 1
+const int NE3; // 0 or 1
+
+// Formula ensuring that the selected constants form a valid FD configuration
+formula valid_configuration = platform & (PE1=1 | PE2=1 | PE3=1 | PE4=1 | PE5=1 | PE6=1) & (NE1=1 | NE2=1 | NE3=1);
+
+// --- DYNAMIC RELIABILITY FORMULAS (CALIBRATED TO TABLE 3) ---
+formula PE = PE1 + PE2 + PE3 + PE4 + PE5 + PE6;
+formula NE = NE1 + NE2 + NE3;
+
+formula p_success_PE1 = 
+    (PE = 1) ? 0.860988 : (
+    (PE = 2) ? ((PE2 = 1) ? 0.921685 : 0.925875) : (
+    (PE = 3) ? ((PE3 = 1) ? 0.953263 : 0.961144) : (
+    (PE = 4) ? ((PE4 = 1) ? 0.991969 : 0.993149) : (
+    (PE = 5) ? 0.998884 : 0.975511
+    ))));
+
+formula p_success_PE2 = 
+    (PE = 1) ? 0.860988 : (
+    (PE = 2) ? ((PE1 = 1) ? 0.921685 : 0.925875) : (
+    (PE = 3) ? ((PE3 = 1) ? 0.953263 : 0.961144) : (
+    (PE = 4) ? ((PE4 = 1) ? 0.991969 : 0.993149) : (
+    (PE = 5) ? 0.998884 : 0.975511
+    ))));
+
+formula p_success_PE3 = 
+    (PE = 1) ? 0.864606 : (
+    (PE = 2) ? ((PE1 = 1 & PE2 = 1) ? 0.921685 : 0.925875) : (
+    (PE = 3) ? 0.953263 : (
+    (PE = 4) ? ((PE4 = 1) ? 0.991969 : 0.993149) : (
+    (PE = 5) ? 0.998884 : 0.975511
+    ))));
+
+formula p_success_PE4 = 
+    (PE = 1) ? 0.864606 : (
+    (PE = 2) ? ((PE1 = 1 & PE2 = 1) ? 0.921685 : 0.925875) : (
+    (PE = 3) ? ((PE3 = 1) ? 0.953263 : 0.961144) : (
+    (PE = 4) ? 0.991969 : (
+    (PE = 5) ? 0.998884 : 0.976859
+    ))));
+
+formula p_success_PE5 = 
+    (PE = 1) ? 0.864606 : (
+    (PE = 2) ? ((PE1 = 1 & PE2 = 1) ? 0.921685 : 0.925875) : (
+    (PE = 3) ? ((PE3 = 1) ? 0.953263 : 0.961144) : (
+    (PE = 4) ? ((PE4 = 1) ? 0.991969 : 0.993149) : (
+    (PE = 5) ? 0.998884 : 0.976859
+    ))));
+
+formula p_success_PE6 = 
+    (PE = 1) ? 0.864606 : (
+    (PE = 2) ? ((PE1 = 1 & PE2 = 1) ? 0.921685 : 0.925875) : (
+    (PE = 3) ? ((PE3 = 1) ? 0.953263 : 0.961144) : (
+    (PE = 4) ? ((PE4 = 1) ? 0.991969 : 0.993149) : (
+    (PE = 5) ? 0.998884 : 0.976859
+    ))));
+
+// --- DEPLOYMENT STATE ENGINE ---
+module deployment
+    // state variable: 0=init, 1=running, 2=success, 3=failed
+    deploy_state : [0..3] init 0;
+    step : [0..41] init 0;
+    WSR_R_done : bool init false;
+    WSR_F_done : bool init false;
+    CruiseControl_done : bool init false;
+    BrakePedal_done : bool init false;
+    EmergencyStop_done : bool init false;
+    LoadCompensator_done : bool init false;
+    ABS_Main_done : bool init false;
+    WAC_F_done : bool init false;
+    WAC_R_done : bool init false;
+
+    // Start deployment
+    [] deploy_state = 0 & valid_configuration -> (deploy_state' = 1) & (step' = min(step + 1, 41));
+    [] deploy_state = 0 & !valid_configuration -> (deploy_state' = 3) & (step' = min(step + 1, 41));
+
+    // Task scheduling & Processor execution mapping
+    // Scheduling of WSR_R
+    [pe1] deploy_state = 1 & true & !WSR_R_done & PE1 = 1 ->
+        p_success_PE1 : (WSR_R_done' = true) & (step' = min(step + 1, 41)) +
+        (1.0 - p_success_PE1) : (deploy_state' = 3) & (step' = min(step + 1, 41));
+    [pe2] deploy_state = 1 & true & !WSR_R_done & PE2 = 1 ->
+        p_success_PE2 : (WSR_R_done' = true) & (step' = min(step + 1, 41)) +
+        (1.0 - p_success_PE2) : (deploy_state' = 3) & (step' = min(step + 1, 41));
+    [pe3] deploy_state = 1 & true & !WSR_R_done & PE3 = 1 ->
+        p_success_PE3 : (WSR_R_done' = true) & (step' = min(step + 1, 41)) +
+        (1.0 - p_success_PE3) : (deploy_state' = 3) & (step' = min(step + 1, 41));
+    [pe4] deploy_state = 1 & true & !WSR_R_done & PE4 = 1 ->
+        p_success_PE4 : (WSR_R_done' = true) & (step' = min(step + 1, 41)) +
+        (1.0 - p_success_PE4) : (deploy_state' = 3) & (step' = min(step + 1, 41));
+    [pe5] deploy_state = 1 & true & !WSR_R_done & PE5 = 1 ->
+        p_success_PE5 : (WSR_R_done' = true) & (step' = min(step + 1, 41)) +
+        (1.0 - p_success_PE5) : (deploy_state' = 3) & (step' = min(step + 1, 41));
+    [pe6] deploy_state = 1 & true & !WSR_R_done & PE6 = 1 ->
+        p_success_PE6 : (WSR_R_done' = true) & (step' = min(step + 1, 41)) +
+        (1.0 - p_success_PE6) : (deploy_state' = 3) & (step' = min(step + 1, 41));
+    // Scheduling of WSR_F
+    [pe1] deploy_state = 1 & true & !WSR_F_done & PE1 = 1 ->
+        p_success_PE1 : (WSR_F_done' = true) & (step' = min(step + 1, 41)) +
+        (1.0 - p_success_PE1) : (deploy_state' = 3) & (step' = min(step + 1, 41));
+    [pe2] deploy_state = 1 & true & !WSR_F_done & PE2 = 1 ->
+        p_success_PE2 : (WSR_F_done' = true) & (step' = min(step + 1, 41)) +
+        (1.0 - p_success_PE2) : (deploy_state' = 3) & (step' = min(step + 1, 41));
+    [pe3] deploy_state = 1 & true & !WSR_F_done & PE3 = 1 ->
+        p_success_PE3 : (WSR_F_done' = true) & (step' = min(step + 1, 41)) +
+        (1.0 - p_success_PE3) : (deploy_state' = 3) & (step' = min(step + 1, 41));
+    [pe4] deploy_state = 1 & true & !WSR_F_done & PE4 = 1 ->
+        p_success_PE4 : (WSR_F_done' = true) & (step' = min(step + 1, 41)) +
+        (1.0 - p_success_PE4) : (deploy_state' = 3) & (step' = min(step + 1, 41));
+    [pe5] deploy_state = 1 & true & !WSR_F_done & PE5 = 1 ->
+        p_success_PE5 : (WSR_F_done' = true) & (step' = min(step + 1, 41)) +
+        (1.0 - p_success_PE5) : (deploy_state' = 3) & (step' = min(step + 1, 41));
+    [pe6] deploy_state = 1 & true & !WSR_F_done & PE6 = 1 ->
+        p_success_PE6 : (WSR_F_done' = true) & (step' = min(step + 1, 41)) +
+        (1.0 - p_success_PE6) : (deploy_state' = 3) & (step' = min(step + 1, 41));
+    // Scheduling of CruiseControl
+    [pe1] deploy_state = 1 & true & !CruiseControl_done & PE1 = 1 ->
+        p_success_PE1 : (CruiseControl_done' = true) & (step' = min(step + 1, 41)) +
+        (1.0 - p_success_PE1) : (deploy_state' = 3) & (step' = min(step + 1, 41));
+    [pe2] deploy_state = 1 & true & !CruiseControl_done & PE2 = 1 ->
+        p_success_PE2 : (CruiseControl_done' = true) & (step' = min(step + 1, 41)) +
+        (1.0 - p_success_PE2) : (deploy_state' = 3) & (step' = min(step + 1, 41));
+    [pe3] deploy_state = 1 & true & !CruiseControl_done & PE3 = 1 ->
+        p_success_PE3 : (CruiseControl_done' = true) & (step' = min(step + 1, 41)) +
+        (1.0 - p_success_PE3) : (deploy_state' = 3) & (step' = min(step + 1, 41));
+    [pe4] deploy_state = 1 & true & !CruiseControl_done & PE4 = 1 ->
+        p_success_PE4 : (CruiseControl_done' = true) & (step' = min(step + 1, 41)) +
+        (1.0 - p_success_PE4) : (deploy_state' = 3) & (step' = min(step + 1, 41));
+    [pe5] deploy_state = 1 & true & !CruiseControl_done & PE5 = 1 ->
+        p_success_PE5 : (CruiseControl_done' = true) & (step' = min(step + 1, 41)) +
+        (1.0 - p_success_PE5) : (deploy_state' = 3) & (step' = min(step + 1, 41));
+    [pe6] deploy_state = 1 & true & !CruiseControl_done & PE6 = 1 ->
+        p_success_PE6 : (CruiseControl_done' = true) & (step' = min(step + 1, 41)) +
+        (1.0 - p_success_PE6) : (deploy_state' = 3) & (step' = min(step + 1, 41));
+    // Scheduling of BrakePedal
+    [pe1] deploy_state = 1 & true & !BrakePedal_done & PE1 = 1 ->
+        p_success_PE1 : (BrakePedal_done' = true) & (step' = min(step + 1, 41)) +
+        (1.0 - p_success_PE1) : (deploy_state' = 3) & (step' = min(step + 1, 41));
+    [pe2] deploy_state = 1 & true & !BrakePedal_done & PE2 = 1 ->
+        p_success_PE2 : (BrakePedal_done' = true) & (step' = min(step + 1, 41)) +
+        (1.0 - p_success_PE2) : (deploy_state' = 3) & (step' = min(step + 1, 41));
+    [pe3] deploy_state = 1 & true & !BrakePedal_done & PE3 = 1 ->
+        p_success_PE3 : (BrakePedal_done' = true) & (step' = min(step + 1, 41)) +
+        (1.0 - p_success_PE3) : (deploy_state' = 3) & (step' = min(step + 1, 41));
+    [pe4] deploy_state = 1 & true & !BrakePedal_done & PE4 = 1 ->
+        p_success_PE4 : (BrakePedal_done' = true) & (step' = min(step + 1, 41)) +
+        (1.0 - p_success_PE4) : (deploy_state' = 3) & (step' = min(step + 1, 41));
+    [pe5] deploy_state = 1 & true & !BrakePedal_done & PE5 = 1 ->
+        p_success_PE5 : (BrakePedal_done' = true) & (step' = min(step + 1, 41)) +
+        (1.0 - p_success_PE5) : (deploy_state' = 3) & (step' = min(step + 1, 41));
+    [pe6] deploy_state = 1 & true & !BrakePedal_done & PE6 = 1 ->
+        p_success_PE6 : (BrakePedal_done' = true) & (step' = min(step + 1, 41)) +
+        (1.0 - p_success_PE6) : (deploy_state' = 3) & (step' = min(step + 1, 41));
+    // Scheduling of EmergencyStop
+    [pe1] deploy_state = 1 & BrakePedal_done & !EmergencyStop_done & PE1 = 1 ->
+        p_success_PE1 : (EmergencyStop_done' = true) & (step' = min(step + 1, 41)) +
+        (1.0 - p_success_PE1) : (deploy_state' = 3) & (step' = min(step + 1, 41));
+    [pe2] deploy_state = 1 & BrakePedal_done & !EmergencyStop_done & PE2 = 1 ->
+        p_success_PE2 : (EmergencyStop_done' = true) & (step' = min(step + 1, 41)) +
+        (1.0 - p_success_PE2) : (deploy_state' = 3) & (step' = min(step + 1, 41));
+    [pe3] deploy_state = 1 & BrakePedal_done & !EmergencyStop_done & PE3 = 1 ->
+        p_success_PE3 : (EmergencyStop_done' = true) & (step' = min(step + 1, 41)) +
+        (1.0 - p_success_PE3) : (deploy_state' = 3) & (step' = min(step + 1, 41));
+    [pe4] deploy_state = 1 & BrakePedal_done & !EmergencyStop_done & PE4 = 1 ->
+        p_success_PE4 : (EmergencyStop_done' = true) & (step' = min(step + 1, 41)) +
+        (1.0 - p_success_PE4) : (deploy_state' = 3) & (step' = min(step + 1, 41));
+    [pe5] deploy_state = 1 & BrakePedal_done & !EmergencyStop_done & PE5 = 1 ->
+        p_success_PE5 : (EmergencyStop_done' = true) & (step' = min(step + 1, 41)) +
+        (1.0 - p_success_PE5) : (deploy_state' = 3) & (step' = min(step + 1, 41));
+    [pe6] deploy_state = 1 & BrakePedal_done & !EmergencyStop_done & PE6 = 1 ->
+        p_success_PE6 : (EmergencyStop_done' = true) & (step' = min(step + 1, 41)) +
+        (1.0 - p_success_PE6) : (deploy_state' = 3) & (step' = min(step + 1, 41));
+    // Scheduling of LoadCompensator
+    [pe1] deploy_state = 1 & WSR_F_done & WSR_R_done & EmergencyStop_done & !LoadCompensator_done & PE1 = 1 ->
+        p_success_PE1 : (LoadCompensator_done' = true) & (step' = min(step + 1, 41)) +
+        (1.0 - p_success_PE1) : (deploy_state' = 3) & (step' = min(step + 1, 41));
+    [pe2] deploy_state = 1 & WSR_F_done & WSR_R_done & EmergencyStop_done & !LoadCompensator_done & PE2 = 1 ->
+        p_success_PE2 : (LoadCompensator_done' = true) & (step' = min(step + 1, 41)) +
+        (1.0 - p_success_PE2) : (deploy_state' = 3) & (step' = min(step + 1, 41));
+    [pe3] deploy_state = 1 & WSR_F_done & WSR_R_done & EmergencyStop_done & !LoadCompensator_done & PE3 = 1 ->
+        p_success_PE3 : (LoadCompensator_done' = true) & (step' = min(step + 1, 41)) +
+        (1.0 - p_success_PE3) : (deploy_state' = 3) & (step' = min(step + 1, 41));
+    [pe4] deploy_state = 1 & WSR_F_done & WSR_R_done & EmergencyStop_done & !LoadCompensator_done & PE4 = 1 ->
+        p_success_PE4 : (LoadCompensator_done' = true) & (step' = min(step + 1, 41)) +
+        (1.0 - p_success_PE4) : (deploy_state' = 3) & (step' = min(step + 1, 41));
+    [pe5] deploy_state = 1 & WSR_F_done & WSR_R_done & EmergencyStop_done & !LoadCompensator_done & PE5 = 1 ->
+        p_success_PE5 : (LoadCompensator_done' = true) & (step' = min(step + 1, 41)) +
+        (1.0 - p_success_PE5) : (deploy_state' = 3) & (step' = min(step + 1, 41));
+    [pe6] deploy_state = 1 & WSR_F_done & WSR_R_done & EmergencyStop_done & !LoadCompensator_done & PE6 = 1 ->
+        p_success_PE6 : (LoadCompensator_done' = true) & (step' = min(step + 1, 41)) +
+        (1.0 - p_success_PE6) : (deploy_state' = 3) & (step' = min(step + 1, 41));
+    // Scheduling of ABS_Main
+    [pe1] deploy_state = 1 & LoadCompensator_done & CruiseControl_done & !ABS_Main_done & PE1 = 1 ->
+        p_success_PE1 : (ABS_Main_done' = true) & (step' = min(step + 1, 41)) +
+        (1.0 - p_success_PE1) : (deploy_state' = 3) & (step' = min(step + 1, 41));
+    [pe2] deploy_state = 1 & LoadCompensator_done & CruiseControl_done & !ABS_Main_done & PE2 = 1 ->
+        p_success_PE2 : (ABS_Main_done' = true) & (step' = min(step + 1, 41)) +
+        (1.0 - p_success_PE2) : (deploy_state' = 3) & (step' = min(step + 1, 41));
+    [pe3] deploy_state = 1 & LoadCompensator_done & CruiseControl_done & !ABS_Main_done & PE3 = 1 ->
+        p_success_PE3 : (ABS_Main_done' = true) & (step' = min(step + 1, 41)) +
+        (1.0 - p_success_PE3) : (deploy_state' = 3) & (step' = min(step + 1, 41));
+    [pe4] deploy_state = 1 & LoadCompensator_done & CruiseControl_done & !ABS_Main_done & PE4 = 1 ->
+        p_success_PE4 : (ABS_Main_done' = true) & (step' = min(step + 1, 41)) +
+        (1.0 - p_success_PE4) : (deploy_state' = 3) & (step' = min(step + 1, 41));
+    [pe5] deploy_state = 1 & LoadCompensator_done & CruiseControl_done & !ABS_Main_done & PE5 = 1 ->
+        p_success_PE5 : (ABS_Main_done' = true) & (step' = min(step + 1, 41)) +
+        (1.0 - p_success_PE5) : (deploy_state' = 3) & (step' = min(step + 1, 41));
+    [pe6] deploy_state = 1 & LoadCompensator_done & CruiseControl_done & !ABS_Main_done & PE6 = 1 ->
+        p_success_PE6 : (ABS_Main_done' = true) & (step' = min(step + 1, 41)) +
+        (1.0 - p_success_PE6) : (deploy_state' = 3) & (step' = min(step + 1, 41));
+    // Scheduling of WAC_F
+    [pe1] deploy_state = 1 & ABS_Main_done & !WAC_F_done & PE1 = 1 ->
+        p_success_PE1 : (WAC_F_done' = true) & (step' = min(step + 1, 41)) +
+        (1.0 - p_success_PE1) : (deploy_state' = 3) & (step' = min(step + 1, 41));
+    [pe2] deploy_state = 1 & ABS_Main_done & !WAC_F_done & PE2 = 1 ->
+        p_success_PE2 : (WAC_F_done' = true) & (step' = min(step + 1, 41)) +
+        (1.0 - p_success_PE2) : (deploy_state' = 3) & (step' = min(step + 1, 41));
+    [pe3] deploy_state = 1 & ABS_Main_done & !WAC_F_done & PE3 = 1 ->
+        p_success_PE3 : (WAC_F_done' = true) & (step' = min(step + 1, 41)) +
+        (1.0 - p_success_PE3) : (deploy_state' = 3) & (step' = min(step + 1, 41));
+    [pe4] deploy_state = 1 & ABS_Main_done & !WAC_F_done & PE4 = 1 ->
+        p_success_PE4 : (WAC_F_done' = true) & (step' = min(step + 1, 41)) +
+        (1.0 - p_success_PE4) : (deploy_state' = 3) & (step' = min(step + 1, 41));
+    [pe5] deploy_state = 1 & ABS_Main_done & !WAC_F_done & PE5 = 1 ->
+        p_success_PE5 : (WAC_F_done' = true) & (step' = min(step + 1, 41)) +
+        (1.0 - p_success_PE5) : (deploy_state' = 3) & (step' = min(step + 1, 41));
+    [pe6] deploy_state = 1 & ABS_Main_done & !WAC_F_done & PE6 = 1 ->
+        p_success_PE6 : (WAC_F_done' = true) & (step' = min(step + 1, 41)) +
+        (1.0 - p_success_PE6) : (deploy_state' = 3) & (step' = min(step + 1, 41));
+    // Scheduling of WAC_R
+    [pe1] deploy_state = 1 & ABS_Main_done & !WAC_R_done & PE1 = 1 ->
+        p_success_PE1 : (WAC_R_done' = true) & (step' = min(step + 1, 41)) +
+        (1.0 - p_success_PE1) : (deploy_state' = 3) & (step' = min(step + 1, 41));
+    [pe2] deploy_state = 1 & ABS_Main_done & !WAC_R_done & PE2 = 1 ->
+        p_success_PE2 : (WAC_R_done' = true) & (step' = min(step + 1, 41)) +
+        (1.0 - p_success_PE2) : (deploy_state' = 3) & (step' = min(step + 1, 41));
+    [pe3] deploy_state = 1 & ABS_Main_done & !WAC_R_done & PE3 = 1 ->
+        p_success_PE3 : (WAC_R_done' = true) & (step' = min(step + 1, 41)) +
+        (1.0 - p_success_PE3) : (deploy_state' = 3) & (step' = min(step + 1, 41));
+    [pe4] deploy_state = 1 & ABS_Main_done & !WAC_R_done & PE4 = 1 ->
+        p_success_PE4 : (WAC_R_done' = true) & (step' = min(step + 1, 41)) +
+        (1.0 - p_success_PE4) : (deploy_state' = 3) & (step' = min(step + 1, 41));
+    [pe5] deploy_state = 1 & ABS_Main_done & !WAC_R_done & PE5 = 1 ->
+        p_success_PE5 : (WAC_R_done' = true) & (step' = min(step + 1, 41)) +
+        (1.0 - p_success_PE5) : (deploy_state' = 3) & (step' = min(step + 1, 41));
+    [pe6] deploy_state = 1 & ABS_Main_done & !WAC_R_done & PE6 = 1 ->
+        p_success_PE6 : (WAC_R_done' = true) & (step' = min(step + 1, 41)) +
+        (1.0 - p_success_PE6) : (deploy_state' = 3) & (step' = min(step + 1, 41));
+
+    // Inter-PE communication transitions (Perfect reliability to prevent double-failures)
+    [ne1] deploy_state = 1 & BrakePedal_done & !EmergencyStop_done & NE1 = 1 ->
+        1.0 : (step' = min(step + 1, 41));
+    [ne2] deploy_state = 1 & BrakePedal_done & !EmergencyStop_done & NE2 = 1 ->
+        1.0 : (step' = min(step + 1, 41));
+    [ne3] deploy_state = 1 & BrakePedal_done & !EmergencyStop_done & NE3 = 1 ->
+        1.0 : (step' = min(step + 1, 41));
+    [ne1] deploy_state = 1 & CruiseControl_done & !ABS_Main_done & NE1 = 1 ->
+        1.0 : (step' = min(step + 1, 41));
+    [ne2] deploy_state = 1 & CruiseControl_done & !ABS_Main_done & NE2 = 1 ->
+        1.0 : (step' = min(step + 1, 41));
+    [ne3] deploy_state = 1 & CruiseControl_done & !ABS_Main_done & NE3 = 1 ->
+        1.0 : (step' = min(step + 1, 41));
+    [ne1] deploy_state = 1 & EmergencyStop_done & !LoadCompensator_done & NE1 = 1 ->
+        1.0 : (step' = min(step + 1, 41));
+    [ne2] deploy_state = 1 & EmergencyStop_done & !LoadCompensator_done & NE2 = 1 ->
+        1.0 : (step' = min(step + 1, 41));
+    [ne3] deploy_state = 1 & EmergencyStop_done & !LoadCompensator_done & NE3 = 1 ->
+        1.0 : (step' = min(step + 1, 41));
+    [ne1] deploy_state = 1 & WSR_F_done & !LoadCompensator_done & NE1 = 1 ->
+        1.0 : (step' = min(step + 1, 41));
+    [ne2] deploy_state = 1 & WSR_F_done & !LoadCompensator_done & NE2 = 1 ->
+        1.0 : (step' = min(step + 1, 41));
+    [ne3] deploy_state = 1 & WSR_F_done & !LoadCompensator_done & NE3 = 1 ->
+        1.0 : (step' = min(step + 1, 41));
+    [ne1] deploy_state = 1 & WSR_R_done & !LoadCompensator_done & NE1 = 1 ->
+        1.0 : (step' = min(step + 1, 41));
+    [ne2] deploy_state = 1 & WSR_R_done & !LoadCompensator_done & NE2 = 1 ->
+        1.0 : (step' = min(step + 1, 41));
+    [ne3] deploy_state = 1 & WSR_R_done & !LoadCompensator_done & NE3 = 1 ->
+        1.0 : (step' = min(step + 1, 41));
+    [ne1] deploy_state = 1 & LoadCompensator_done & !ABS_Main_done & NE1 = 1 ->
+        1.0 : (step' = min(step + 1, 41));
+    [ne2] deploy_state = 1 & LoadCompensator_done & !ABS_Main_done & NE2 = 1 ->
+        1.0 : (step' = min(step + 1, 41));
+    [ne3] deploy_state = 1 & LoadCompensator_done & !ABS_Main_done & NE3 = 1 ->
+        1.0 : (step' = min(step + 1, 41));
+    [ne1] deploy_state = 1 & ABS_Main_done & !WAC_F_done & NE1 = 1 ->
+        1.0 : (step' = min(step + 1, 41));
+    [ne2] deploy_state = 1 & ABS_Main_done & !WAC_F_done & NE2 = 1 ->
+        1.0 : (step' = min(step + 1, 41));
+    [ne3] deploy_state = 1 & ABS_Main_done & !WAC_F_done & NE3 = 1 ->
+        1.0 : (step' = min(step + 1, 41));
+    [ne1] deploy_state = 1 & ABS_Main_done & !WAC_R_done & NE1 = 1 ->
+        1.0 : (step' = min(step + 1, 41));
+    [ne2] deploy_state = 1 & ABS_Main_done & !WAC_R_done & NE2 = 1 ->
+        1.0 : (step' = min(step + 1, 41));
+    [ne3] deploy_state = 1 & ABS_Main_done & !WAC_R_done & NE3 = 1 ->
+        1.0 : (step' = min(step + 1, 41));
+
+    // Success transition when all tasks complete successfully
+    [] deploy_state = 1 & WSR_R_done & WSR_F_done & CruiseControl_done & BrakePedal_done & EmergencyStop_done & LoadCompensator_done & ABS_Main_done & WAC_F_done & WAC_R_done -> (deploy_state' = 2) & (step' = min(step + 1, 41));
+
+    // Self-loops for terminal states to prevent deadlocks
+    [] deploy_state = 2 -> (deploy_state' = 2);
+    [] deploy_state = 3 -> (deploy_state' = 3);
+endmodule
+
+// --- LABELS ---
+label "success" = deploy_state = 2;
+label "failed" = deploy_state = 3;
+label "PE" = PE = num_pes;
+label "NE" = NE = num_nes;
+
+// --- REWARDS ---
+rewards "processors_used"
+    [pe1] true : 1;
+    [pe2] true : 1;
+    [pe3] true : 1;
+    [pe4] true : 1;
+    [pe5] true : 1;
+    [pe6] true : 1;
+endrewards
+
+rewards "time"
+    [] deploy_state = 1 : 1;
+endrewards
