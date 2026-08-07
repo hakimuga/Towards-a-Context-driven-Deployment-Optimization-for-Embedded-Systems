@@ -1,0 +1,28 @@
+// =========================================================================
+// PCTL PROPERTIES FOR MPSoC DEPLOYMENT OPTIMIZATION
+// =========================================================================
+
+// --- 1. Expected Deployment Time (Equations 3 & 4) ---
+// These queries compute the minimum and maximum expected steps/time to 
+// successfully deploy all software tasks onto the hardware platform.
+filter(min, R{"time"}=? [ F "success" ])
+filter(max, R{"time"}=? [ F "success" ])
+
+// --- 2. Multi-Processor Reliability under Resource Constraints (Equations 5 & 6) ---
+// These queries verify if the deployment successfully terminates within the 40-step
+// time limit under the specific processor (PE) and bus (NE) count configurations.
+// Make sure to define the constants 'num_pes' and 'num_nes' when running Storm/PRISM!
+Pmin=? [ F<=40 ("success" & "NE" & "PE") ]
+Pmax=? [ F<=40 ("success" & "NE" & "PE") ]
+
+// --- 3. General (Unbounded) Reliability Reachability ---
+// These queries compute the worst-case and best-case probability of achieving 
+// a successful deployment without any temporal bounds.
+Pmin=? [ F "success" ]
+Pmax=? [ F "success" ]
+
+// --- 4. Alternative Formulas for STORM's Exact Engine ---
+// Since the 'exact engine' in STORM does not natively support bounded-until (<=40) operators,
+// use these alternative unbounded formulations if you are running the exact solver:
+Pmin=? [ F ("success" & "NE" & "PE" & step <= 40) ]
+Pmax=? [ F ("success" & "NE" & "PE" & step <= 40) ]
