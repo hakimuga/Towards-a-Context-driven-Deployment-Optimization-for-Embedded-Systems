@@ -109,7 +109,6 @@ The generator script (`prism_generator-v5.py`) back-calculates individual task e
 | **5 Cores (Optimal)** | $0.99$ | $0.998884$ | $0.998884^9 \approx \mathbf{0.99}$ |
 | **6 Cores** | $0.80$ | $0.975511$ | $0.975511^9 \approx \mathbf{0.80}$ |
 
-This top-down calibration guarantees that your formal FTS models are mathematically consistent, scientifically justified, and 100% reproducible.
 
 ---
 
