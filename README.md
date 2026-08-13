@@ -92,7 +92,7 @@ python3 scope_simulator-v7.py
 ### Why is the calibration necessary?
 In real-world microprocessors, hardware component failure rates ($\lambda$) are extremely small (typically $\leq 10^{-6}$ failures/hour). If these rates are plugged directly into PRISM, the computed system reliability is trivially close to $1.0$ for all architectures.
 
-To demonstrate the FTS model checking behavior and match the illustrative figures in **Table 3** of the article (which spans from $0.26$ to $0.99$), we treat the Table 3 reliability goals—aligned with **ISO 26262** Automotive Safety Integrity Levels (ASIL)—as **high-level input requirements**.
+To demonstrate the FTS model checking behavior and match **Table 3** of the article (which spans from $0.26$ to $0.99$), we treat the Table 3 reliability goals—aligned with **ISO 26262** Automotive Safety Integrity Levels (ASIL) as **high-level input requirements**.
 
 ### Mathematical Formulation
 The ABS application consists of **9 sequential software tasks** (Fig. 8 of the paper). For the deployment to succeed, all 9 tasks must execute successfully without a hardware failure. Under a series reliability block diagram (RBD) model:
